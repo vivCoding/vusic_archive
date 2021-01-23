@@ -11,7 +11,10 @@
                 :song = "song"
                 :queued = "true"
                 :class = "{ currentPlaying: currentSong != null && currentSong.queueId == song.queueId }"
-                @removeSong = "removeSong"
+                @playSong = "$emit('playSong', song)"
+                @removeSong = "$emit('removeSong', song)"
+                @moveSongForward = "$emit('moveSongForward', song)"
+                @moveSongBackward = "$emit('moveSongBackward', song)"
             />
         </div>
     </div>
@@ -35,11 +38,11 @@ export default {
         }
     },
 
-    methods: {
-        removeSong(song) {
-            this.$emit("removeSong", song);
-        }
-    }
+    // methods: {
+    //     removeSong(song) {
+    //         this.$emit("removeSong", song);
+    //     }
+    // }
 }
 </script>
 

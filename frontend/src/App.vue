@@ -5,12 +5,16 @@
             <QueueView :songs = "queue"
                 :currentSong = "currentSong"
                 @removeSong = "removeSong"
+                @playSong = "playSong"
+                @moveSongForward = "moveSongForward"
+                @moveSongBackward = "moveSongBackward"
             />
             <SearchView @queueSong = "queueSong"/>
         </div>
         <Playbar :songToPlay = "currentSong"    
             @songEnded = "playNextSong"
             @skipSong = "playNextSong"
+            @previousSong = "playPreviousSong"
         />
     </div>
 </template>
@@ -32,8 +36,14 @@ export default {
             queue: [],
             currentSong: null,
             currentQueueIndex: 0,
-            // playing: false,
+            audioPlaying: false,
             queueId: 1
+        }
+    },
+
+    watch: {
+        currentQueueIndex(newNum) {
+            console.log(newNum);
         }
     },
 
@@ -53,29 +63,86 @@ export default {
                 }
             }
             this.queueId++;
-            if (!this.queue.length) {
-                this.currentSong = songToAdd;
-            }
             this.queue.push(songToAdd);
+            if (!this.audioPlaying) {
+                this.currentSong = songToAdd;
+                this.currentQueueIndex = this.queue.length - 1;
+                this.audioPlaying = true;
+            }
         },
         playNextSong() {
-            this.queue.shift();
-            this.currentQueueIndex++;
-            // if (this.currentQueueIndex < this.queue.length) {
-            if (this.queue.length) {
-                // this.currentSong = this.queue[this.currentQueueIndex];
-                this.currentSong = this.queue[0];
+            if (this.currentQueueIndex < this.queue.length - 1) {
+                this.currentQueueIndex++;
+                this.currentSong = this.queue[this.currentQueueIndex];
+                this.audioPlaying = true;
             } else {
                 this.currentSong = null;
+                this.audioPlaying = false;
+            }
+        },
+        playPreviousSong() {
+            if (this.currentQueueIndex > 0) {
+                if (this.currentQueueIndex > this.queue.length - 1) {
+                    this.currentQueueIndex = this.queue.length - 1;
+                } else {
+                    this.currentQueueIndex--;
+                }
+                this.currentSong = this.queue[this.currentQueueIndex];
+                this.audioPlaying = true;
             }
         },
         removeSong(songToRemove) {
-            console.log("removing song");
-            if (songToRemove.queueId == this.currentSong.queueId) {
-                this.playNextSong();
+            console.log("removing song", songToRemove.snippet.title, songToRemove.queueId);
+            if (this.currentSong != null) {
+                if (songToRemove.queueId == this.currentSong.queueId) {
+                    this.playNextSong();
+                }
+                if (songToRemove.queueId < this.currentSong.queueId) {
+                    this.currentQueueIndex--;
+                }
             }
-            // console.log(songToRemove.queueId, this.queue)
             this.queue = this.queue.filter(song => song.queueId !== songToRemove.queueId);
+        },
+        playSong(song) {
+            console.log("playing different song from order")
+            this.currentSong = song;
+            for (let i = 0; i < this.queue.length; i++) {
+                if (this.queue[i].queueId == this.currentSong.queueId) {
+                    this.currentQueueIndex = i;
+                    break;
+                }
+            }
+        },
+        // TODO: refactor this sheet and create function to find index of song in queue
+        moveSongForward(song) {
+            let temp = null;
+            let index = 0;
+            for (let i = 0; i < this.queue.length - 1; i++) {
+                if (this.queue[i].queueId == song.queueId) {
+                    temp = this.queue[i + 1];
+                    index = i;
+                    break;
+                }
+            }
+            if (temp != null) {
+                this.queue[index + 1] = song;
+                this.queue[index] = temp;
+            }
+        },
+        moveSongBackward(song) {
+            let temp = null;
+            let index = 0;
+            for (let i = 1; i < this.queue.length; i++) {
+                if (this.queue[i].queueId == song.queueId) {
+                    temp = this.queue[i - 1];
+                    index = i;
+                    break;
+                }
+            }
+            if (temp != null) {
+                this.queue[index - 1] = song;
+                this.queue[index] = temp;
+            }
         }
     }
 };

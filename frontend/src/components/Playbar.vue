@@ -15,14 +15,14 @@
             <button @click = "setLoop" :class = "{ buttonEnabled: audioLoop }">
                 <img src = "../assets/loop-white-18dp/2x/baseline_loop_white_18dp.png"/>
             </button>
-            <button>
+            <button @click = "$emit('previousSong')">
                 <img src = "../assets/skip_previous-white-18dp/2x/baseline_skip_previous_white_18dp.png"/>
             </button>
             <button @click = "audioPlaying ? pauseAudio() : resumeAudio()">
                 <img v-if = "audioPlaying" src = "../assets/pause_circle_outline-white-36dp/2x/baseline_pause_circle_outline_white_36dp.png"/>
                 <img v-else src = "../assets/play_circle_outline-white-36dp/2x/baseline_play_circle_outline_white_36dp.png"/>
             </button>
-            <button @click = "skipSong">
+            <button @click = "$emit('skipSong')">
                 <img src = "../assets/skip_next-white-18dp/2x/baseline_skip_next_white_18dp.png"/>
             </button>
             <button @click = "muteAudio" :class = "{ buttonEnabled: audioMuted }">
@@ -149,9 +149,6 @@ export default {
         resumeAudio() {
             this.audioPaused = false;
             this.playAudioFromSeek();
-        },
-        skipSong() {
-            this.$emit("skipSong");
         },
         muteAudio() {
             this.audioMuted = !this.audioMuted;
