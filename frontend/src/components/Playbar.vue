@@ -1,12 +1,35 @@
 <template>
     <div id = "playbarContainer">
-        <span>{{ currentTimeInMin }}</span>
-        <input id = "audioControls" type ="range" :max = "duration" :value = "currentTime" @input="seekAudio" @change = "playAudioFromSeek"/>
-        <span>{{ durationInMin }} </span>
-        <br>
-        <button @click = "audioPlaying ? pauseAudio() : resumeAudio()" :disabled = "songToPlay == null">{{ audioPlaying ? "Pause" : "Play" }}</button>
-        <button @click = "skipSong">Skip</button>
-        <button>Mute</button>
+        <div id = "audioTimeline">
+            <span class = "timeLabel">{{ currentTimeInMin }}</span>
+            <input id = "audioSlider" type ="range"
+                :max = "duration"
+                :value = "currentTime"
+                :disabled = "!audioPlaying && !audioPaused"
+                @input = "seekAudio"
+                @change = "playAudioFromSeek"
+            />
+            <span class = "timeLabel">{{ durationInMin }} </span>
+        </div>
+        <div id = "audioButtons">
+            <button @click = "setLoop" :class = "{ buttonEnabled: audioLoop }">
+                <img src = "../assets/loop-white-18dp/2x/baseline_loop_white_18dp.png"/>
+            </button>
+            <button>
+                <img src = "../assets/skip_previous-white-18dp/2x/baseline_skip_previous_white_18dp.png"/>
+            </button>
+            <button @click = "audioPlaying ? pauseAudio() : resumeAudio()">
+                <img v-if = "audioPlaying" src = "../assets/pause_circle_outline-white-36dp/2x/baseline_pause_circle_outline_white_36dp.png"/>
+                <img v-else src = "../assets/play_circle_outline-white-36dp/2x/baseline_play_circle_outline_white_36dp.png"/>
+            </button>
+            <button @click = "skipSong">
+                <img src = "../assets/skip_next-white-18dp/2x/baseline_skip_next_white_18dp.png"/>
+            </button>
+            <button @click = "muteAudio" :class = "{ buttonEnabled: audioMuted }">
+                <img v-if = "!audioMuted" src = "../assets/volume_up-white-18dp/2x/baseline_volume_up_white_18dp.png"/>
+                <img v-else src = "../assets/volume_off-white-18dp/2x/baseline_volume_off_white_18dp.png"/>
+            </button>
+        </div>
     </div>
 </template>
 
@@ -14,6 +37,7 @@
 // import PlayCircle from "vue-material-design-icons/PlayCircle"
 import { url } from "../Requests";
 import { Howl } from "howler";
+
 
 let howler = null;
 let videoId = "";
@@ -33,10 +57,11 @@ export default {
         return {
             duration: 0,
             currentTime: 0,
-            audioSrc: document.getElementById("audioSrc"),
             playingLoop: null,
             audioPlaying: false,
             audioPaused: false,
+            audioMuted: false,
+            audioLoop: false,
         }
     },
 
@@ -52,6 +77,7 @@ export default {
     watch: {
         songToPlay(newSong) {
             console.log("stopping", videoId);
+            clearInterval(this.playingLoop);
             if (this.audioPlaying && howler != null) {
                 howler.stop();
                 // TODO: why this giving error
@@ -81,44 +107,61 @@ export default {
                     console.log("playing");
                 },
                 onend: function() {
-                    ref.$emit("songEnded");
+                    if (!ref.audioLoop) {
+                        ref.$emit("songEnded");
+                        ref.audioPlaying = false;
+                        clearInterval(this.playingLoop);
+                    }
                 }
             })
             howler.play();
+            howler.volume(this.audioMuted ? 0 : 1);
             this.playingLoop = setInterval(function() {
                 ref.currentTime = howler.seek();
-            }, 1)
+            }, 100)
         },
         seekAudio(e) {
             clearInterval(this.playingLoop);
             let newTime = e.target.value;
             this.currentTime = newTime;
+            // console.log(this.currentTime);
         },
         playAudioFromSeek() {
-            if (!this.paused) {
+            if (!this.audioPaused && howler != null) {
                 howler.stop();
                 howler.play();
-                howler.seek(this.currentTime);
+                howler.seek(parseInt(this.currentTime));
                 let ref = this;
                 this.playingLoop = setInterval(function() {
+                    // console.log(parseInt(ref.currentTime));
                     ref.currentTime = howler.seek();
-                }, 1);
+                }, 100);
                 this.audioPlaying = true;
             }
         },
         pauseAudio() {
-            this.paused = true;
-            howler.pause();
+            this.audioPaused = true;
+            if (howler != null)
+                howler.pause();
             clearInterval(this.playingLoop);
             this.audioPlaying = false;
-            console.log("paused");
         },
         resumeAudio() {
-            this.paused = false;
+            this.audioPaused = false;
             this.playAudioFromSeek();
         },
         skipSong() {
             this.$emit("skipSong");
+        },
+        muteAudio() {
+            this.audioMuted = !this.audioMuted;
+            if (howler != null)
+                howler.volume(this.audioMuted ? 0 : 1);
+        },
+        setLoop() {
+            this.audioLoop = !this.audioLoop;
+            if (howler != null)
+                howler.loop(this.audioLoop);
         }
     }
 }
@@ -129,31 +172,43 @@ export default {
 #playbarContainer {
     width: 100%;
     text-align: center;
-    padding: 2em 0;
+    /* margin-top: 6em; */
+    padding: 2em 0 1em 0;
+    background-color: rgb(43, 43, 43);
 }
 
-#audioControls {
+#audioTimeline {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.timeLabel {
+    padding: 0 0.5em;
+    font-size: 130%;
+}
+
+#audioSlider {
     -webkit-appearance: none;
     width: 70%;
     height: 1em;
-    opacity: 0.7;
-    background: #686868;
+    background: #505050;
     outline: none;
     -webkit-transition: .2s;
-    transition: opacity .2s;
+    transition: .2s;
     border-radius: 1em;
     cursor: pointer;
 }
 
-#audioControls:hover {
-    opacity: 1;
+#audioSlider:hover {
+    background: #686868;
 }
 
-#audioControls::-webkit-slider-thumb {
+#audioSlider::-webkit-slider-thumb {
     -webkit-appearance: none; /* Override default look */
     width: 1em;
     height: 1em;
-    background: #00ff08;
+    background: lime;
     border-radius: 1em;
     cursor: pointer;
     outline: none;
@@ -162,30 +217,53 @@ export default {
     /* box-shadow: -1vw 0 0 1vw #5be95f; */
 }
 
-#audioControls::-webkit-slider-thumb:hover {
+#audioSlider::-webkit-slider-thumb:hover {
     width: 1em;
     height: 2.5em;
 }
 
-/* ::-webkit-slider-runnable-track {
-    background: #5be95f;
-} */
-
-#audioControls::-moz-range-thumb {
+#audioSlider::-moz-range-thumb {
     -webkit-appearance: none; /* Override default look */
     width: 1em;
     height: 1em;
-    background: #00ff08;
+    background: lime;
     border-radius: 1em;
+    box-shadow: lime;
     cursor: pointer;
     outline: none;
     -webkit-transition: .25s;
     transition: .25s;
 }
 
-#audioControls::-moz-range-thumb:hover {
+#audioSlider::-moz-range-thumb:hover {
     width: 1em;
     height: 2.5em;
+}
+
+#audioButtons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.5em;
+}
+
+.buttonEnabled {
+    background: rgb(124, 124, 124);
+    border-radius: 5em;
+    /* padding: 1em; */
+}
+
+button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.75em;
+    display: flex;
+    transition: 0.2s
+}
+
+button:hover {
+    opacity: 0.5;
 }
 
 </style>

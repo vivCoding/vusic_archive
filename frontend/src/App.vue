@@ -1,5 +1,6 @@
 <template>
     <div>
+        <Navbar/>
         <div id = "main">
             <QueueView :songs = "queue"
                 :currentSong = "currentSong"
@@ -7,7 +8,7 @@
             />
             <SearchView @queueSong = "queueSong"/>
         </div>
-        <Playbar :songToPlay = "currentSong"
+        <Playbar :songToPlay = "currentSong"    
             @songEnded = "playNextSong"
             @skipSong = "playNextSong"
         />
@@ -15,14 +16,15 @@
 </template>
 
 <script>
-import Playbar from "./components/Playbar";
-import SearchView from "./components/SearchView";
+import Navbar from "./components/Navbar";
 import QueueView from "./components/QueueView";
+import SearchView from "./components/SearchView";
+import Playbar from "./components/Playbar";
 
 export default {
     name: 'App',
     components: {
-        Playbar, SearchView, QueueView
+        Playbar, SearchView, QueueView, Navbar
     },
     
     data: function() {
@@ -72,7 +74,8 @@ export default {
             if (songToRemove.queueId == this.currentSong.queueId) {
                 this.playNextSong();
             }
-            this.queue = this.queue.filter(song => song.queueId != songToRemove.queueId);
+            // console.log(songToRemove.queueId, this.queue)
+            this.queue = this.queue.filter(song => song.queueId !== songToRemove.queueId);
         }
     }
 };
@@ -81,9 +84,10 @@ export default {
 <style scoped>
 #main {
     width: 100%;
-    height: 75vh;
+    height: 65vh;
     display: flex;
     flex-direction: row;
     justify-content: center;
+    margin: 3em 0;
 }
 </style>

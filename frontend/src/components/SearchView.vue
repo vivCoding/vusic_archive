@@ -1,17 +1,21 @@
 <template>
     <div id = "searchMain">
-        <input id = "searchInput" placeholder="Enter a song name, and start queuing!" v-model = "query"/>
-        <h2>Results</h2>
+        <div id = "searchBar">
+            <input id = "searchInput" placeholder="Enter a song name, and start queuing!" v-model = "query"/>
+            <!-- <button>Search</button> -->
+        </div>
+        <h1>Results</h1>
+        <h3 v-show = "makingRequest" id = "loadingResultsMessage">Loading results...</h3>
         <div id = "resultsList">
-            <p v-show = "makingRequest">Loading results...</p>
-            <SongView v-show = "!makingRequest" v-for = "result in results" :key = "result.id.videoId" :song = "result" :queued = "false" @queueSong = "queueSong"/>
+            <h3 v-if = "error">Service is currently down right now. Please try again later!</h3>
+            <SongView v-for = "result in results" :key = "result.id.videoId" :song = "result" :queued = "false" @queueSong = "queueSong"/>
         </div>
     </div>
 </template>
 
 <script>
 import SongView from "./SongView";
-import { getSearchResults } from "../Requests";
+import { getSearchResults, testResults } from "../Requests";
 
 export default {
     components: {
@@ -22,37 +26,13 @@ export default {
         return {
             makingRequest: false,
             query: "",
-            results: [
-                // {
-                //     id: {
-                //         videoId: "KTZ-y85Erus"
-                //     },
-                //     snippet: {
-                //         title: "That's Why I Gave Up On Music -Acoustic- (English Cover)【Will Stetson】「だから僕は音楽を辞めた」",
-                //         thumbnails: {
-                //             default: {
-                //                 url: "https://i.ytimg.com/vi/HJAWN2wcQU4/default.jpg"
-                //             }
-                //         }
-                //     }
-                // },
-                // {
-                //     id: { videoId: "-VKIqrvVOpo"},
-                //     snippet: {
-                //         title: "ヨルシカ - ただ君に晴れ (MUSIC VIDEO)",
-                //         thumbnails: {
-                //             default: {
-                //                 url: "https://i.ytimg.com/vi/-VKIqrvVOpo/default.jpg"
-                //             }
-                //         }
-                //     }
-                // }
-            ],
+            results: testResults,
+            error: false
         }
     },
     watch: {
         query() {
-            if (!this.makingRequest) {
+            if (this.query != "" && !this.makingRequest) {
                 this.makingRequest = true;
                 setTimeout(this.updateResults, 2000);
             }
@@ -62,15 +42,21 @@ export default {
     methods: {
         updateResults() {
             console.log("searched", this.query);
-            // this.makingRequest = false;
+            this.makingRequest = true;
             getSearchResults(this.query).then(response => {
-                this.results = response.items;
+                if (response == "error") {
+                    this.error = true;
+                    console.log("error");
+                } else {
+                    this.results = response.items;
+                    this.error = false;
+                }
+                document.getElementById("resultsList").scrollTop = 0;
                 this.makingRequest = false;
-                console.log(response);
             })   
         },
         queueSong(song) {
-            this.$emit("queueSong", song)
+            this.$emit("queueSong", song);
         }
     }
 }
@@ -78,13 +64,14 @@ export default {
 
 <style scoped>
 #searchMain {
-    border-left: 1px white solid;
+    border-left: 0.25em lightgrey solid;
     padding: 2em;
+    padding-left: 5em;
     width: 35vw;
 }
 
 #searchInput {
-    width: 100%;
+    width: 95%;
     background-color: rgb(87, 87, 87);
     height: 2em;
     color: white;
@@ -97,7 +84,17 @@ export default {
 }
 
 #resultsList {
+    width: 100%;
     height: 90%;
     overflow: auto;
+    padding-right: 1em;
+}
+
+/* #loadingResultsMessage {
+    margin: 0em;
+} */
+
+::-webkit-scrollbar-track {
+    background: lime;
 }
 </style>

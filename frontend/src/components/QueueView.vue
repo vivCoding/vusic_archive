@@ -1,13 +1,17 @@
 <template>
     <div id = "queueMain">
-        <h1>Current Queue</h1>
+        <h1>Song Queue</h1>
         <div id = "songList">
-            <SongView v-for = "song in songs"
+            <div v-if = "!songs.length" id = "noSongsDiv">
+                <h2>No songs in queue right now!</h2>
+                <h2>Songs you queue appear here</h2>
+            </div>
+            <SongView v-else v-for = "song in songs"
                 :key = "song.id.videoId"
                 :song = "song"
                 :queued = "true"
-                @removeSong = "removeSong"
                 :class = "{ currentPlaying: currentSong != null && currentSong.queueId == song.queueId }"
+                @removeSong = "removeSong"
             />
         </div>
     </div>
@@ -42,13 +46,18 @@ export default {
 <style scoped>
 #queueMain {
     width: 45vw;
-    padding: 1em;
+    padding: 2em;
+    padding-right: 5em;
 }
 
 #songList {
     height: 90%;
     /* background: green; */
     overflow-y: auto;
+}
+
+#noSongsDiv h2 {
+    font-weight: 200;
 }
 
 .currentPlaying {

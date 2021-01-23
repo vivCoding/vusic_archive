@@ -41,16 +41,34 @@ async function getSearchResults(query) {
         part: "id, snippet",
         q: query,
         maxResults: 50,
-        type: "video"
+        type: "video",
+        relevanceLanguage: "en"
     });
     return response.data;
 }
 
 app.get("/searchresults", (req, res) => {
     let query = req.query.query;
-    getSearchResults(query).then(response => {
-        res.json(response);
+
+    youtube.search.list({
+        part: "id, snippet",
+        q: query,
+        maxResults: 25,
+        type: "video",
+        relevanceLanguage: "en"
+    }).then(response => {
+        if (response.status == 200) {
+            res.json(response);
+        } else {
+            res.status(500).send("error");
+        }
+    }).catch(error => {
+        res.status(500).send("error");
     })
+
+    // getSearchResults(query).then(response => {
+    //     res.json(response);
+    // })
 })
 
 // play audio from youtube
