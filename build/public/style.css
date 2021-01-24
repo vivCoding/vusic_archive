@@ -1,0 +1,16 @@
+body {
+    background-color: rgb(12, 12, 12);
+    color: white;
+    /* padding: 3em; */
+    padding: 0;
+    margin: 0;
+    font-family: monospace;
+}
+
+::-webkit-scrollbar-track {
+    background: none;
+}
+
+::-webkit-scrollbar-thumb {
+    background: none;
+}

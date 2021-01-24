@@ -7,7 +7,7 @@
         <h1>Results</h1>
         <h3 v-show = "makingRequest" id = "loadingResultsMessage">Loading results...</h3>
         <div id = "resultsList">
-            <h3 v-if = "error">Service is currently down right now. Please try again later!</h3>
+            <h3 v-show = "error">Service is currently down right now. Please try again later!</h3>
             <SongView v-for = "result in results" :key = "result.id.videoId" :song = "result" :queued = "false" @queueSong = "queueSong"/>
         </div>
     </div>
@@ -26,7 +26,7 @@ export default {
         return {
             makingRequest: false,
             query: "",
-            results: testResults,
+            results: [],
             error: false
         }
     },
@@ -41,14 +41,14 @@ export default {
 
     methods: {
         updateResults() {
-            console.log("searched", this.query);
+            console.log("searched:", this.query);
             this.makingRequest = true;
             getSearchResults(this.query).then(response => {
                 if (response == "error") {
                     this.error = true;
                     console.log("error");
                 } else {
-                    this.results = response.items;
+                    this.results = response.data.items;
                     this.error = false;
                 }
                 document.getElementById("resultsList").scrollTop = 0;

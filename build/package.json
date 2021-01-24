@@ -8,6 +8,8 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "googleapis": "^67.0.0",
+    "socket.io": "^3.1.0",
+    "socket.io-redis": "^6.0.1",
     "ytdl-core": "^4.4.4"
   },
   "devDependencies": {},
@@ -16,5 +18,8 @@
     "start": "node server.js"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "engines": {
+    "node": "15.3.0"
+  }
 }

@@ -1,10 +1,10 @@
 <template>
     <div id = "playbarContainer">
         <div id = "audioTimeline">
-            <span class = "timeLabel">{{ currentTimeInMin }}</span>
+            <span class = "timeLabel">{{ playTimeInMin }}</span>
             <input id = "audioSlider" type ="range"
                 :max = "duration"
-                :value = "currentTime"
+                :value = "playTime"
                 :disabled = "!audioPlaying && !audioPaused"
                 @input = "seekAudio"
                 @change = "playAudioFromSeek"
@@ -51,13 +51,22 @@ export default {
             required: true,
             type: Object
         },
+        playAtTime: {
+            type: Number
+        },
+        pausedState: {
+            type: Boolean
+        },
+        loopState: {
+            type: Boolean
+        }
     },
 
     data: function() {
         return {
             duration: 0,
-            currentTime: 0,
             playingLoop: null,
+            playTime: 0,
             audioPlaying: false,
             audioPaused: false,
             audioMuted: false,
@@ -69,24 +78,50 @@ export default {
         durationInMin() {
             return this.convertToMin(this.duration);
         },
-        currentTimeInMin() {
-            return this.convertToMin(this.currentTime);
+        playTimeInMin() {
+            return this.convertToMin(this.playTime);
         },
     },
 
     watch: {
         songToPlay(newSong) {
-            console.log("stopping", videoId);
+            // console.log("song has changed!", newSong != null ? newSong.snippet.title : null);
+            console.log("new song");
             clearInterval(this.playingLoop);
-            if (this.audioPlaying && howler != null) {
+            if (howler != null) {
                 howler.stop();
-                // TODO: why this giving error
-                // howler.unload();
+                howler.unload();
             }
             if (newSong != null) {
                 this.playAudio();
             }
         },
+        playAtTime(newTime) {
+            console.log("new play time");
+            if (howler != null) {
+                howler.stop();
+                howler.play();
+                this.playTime = this.playAtTime;
+                howler.seek(newTime);
+                console.log(newTime);
+            }
+        },
+        pausedState(paused) {
+            if (paused) {
+                this.pauseAudio()
+            } else {
+                this.resumeAudio();
+            }
+        },
+        loopState(looping) {
+            if (looping) {
+                this.audioLoop = true;
+            } else {
+                this.audioLoop = false;
+            }
+            if (howler != null)
+                howler.loop(this.audioLoop);
+        }
     },
 
     methods: {
@@ -104,7 +139,6 @@ export default {
                 onload: function() {
                     ref.duration = howler.duration();
                     ref.audioPlaying = true;
-                    console.log("playing");
                 },
                 onend: function() {
                     if (!ref.audioLoop) {
@@ -112,34 +146,33 @@ export default {
                         ref.audioPlaying = false;
                         clearInterval(this.playingLoop);
                     }
-                }
+                },
             })
             howler.play();
+            howler.seek(this.playAtTime)
             howler.volume(this.audioMuted ? 0 : 1);
-            this.playingLoop = setInterval(function() {
-                ref.currentTime = howler.seek();
-            }, 100)
+            this.setCurrentTimeInterval();
         },
         seekAudio(e) {
             clearInterval(this.playingLoop);
             let newTime = e.target.value;
-            this.currentTime = newTime;
+            this.playTime = newTime;
+            // this.$emit("updateCurrentTime", newTime);
             // console.log(this.currentTime);
         },
         playAudioFromSeek() {
-            if (!this.audioPaused && howler != null) {
+            if (!this.pausedState && howler != null) {
                 howler.stop();
                 howler.play();
-                howler.seek(parseInt(this.currentTime));
-                let ref = this;
-                this.playingLoop = setInterval(function() {
-                    // console.log(parseInt(ref.currentTime));
-                    ref.currentTime = howler.seek();
-                }, 100);
+                // console.log(this.currentTime);
+                howler.seek(parseInt(this.playTime));
+                this.$emit("sendCurrentTime", this.playTime);
+                this.setCurrentTimeInterval();
                 this.audioPlaying = true;
             }
         },
         pauseAudio() {
+            this.$emit("audioPaused", true);
             this.audioPaused = true;
             if (howler != null)
                 howler.pause();
@@ -147,6 +180,7 @@ export default {
             this.audioPlaying = false;
         },
         resumeAudio() {
+            this.$emit("audioPaused", false);
             this.audioPaused = false;
             this.playAudioFromSeek();
         },
@@ -157,8 +191,16 @@ export default {
         },
         setLoop() {
             this.audioLoop = !this.audioLoop;
+            this.$emit("audioLoop", this.audioLoop);
             if (howler != null)
                 howler.loop(this.audioLoop);
+        },
+        setCurrentTimeInterval() {
+            let ref = this;
+            this.playingLoop = setInterval(function() {
+                ref.playTime = howler.seek();
+                ref.$emit("updateCurrentTime", howler.seek());
+            }, 100);
         }
     }
 }

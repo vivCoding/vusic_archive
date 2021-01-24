@@ -13,8 +13,8 @@
                 <img class = "actionButton" src = "../assets/queue-white-18dp/2x/baseline_queue_white_18dp.png"/>
             </div>
             <div v-else>
-                <img class = "actionButton" id = "forwardButton" src = "../assets/arrow_downward-white-18dp/2x/baseline_arrow_downward_white_18dp.png"/>
                 <img class = "actionButton" id = "backwardButton" src = "../assets/arrow_upward-white-18dp/2x/baseline_arrow_upward_white_18dp.png"/>
+                <img class = "actionButton" id = "forwardButton" src = "../assets/arrow_downward-white-18dp/2x/baseline_arrow_downward_white_18dp.png"/>
                 <img class = "actionButton" id = "removeButton" @click = "doAction" src = "../assets/close-white-18dp/2x/baseline_close_white_18dp.png"/>
             </div>
         </div>
