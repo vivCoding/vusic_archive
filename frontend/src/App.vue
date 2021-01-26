@@ -29,6 +29,7 @@
             @updateCurrentTime = "updateCurrentTime"
             @sendCurrentTime = "sendCurrentTime"
         />
+        <Footer/>
     </div>
 </template>
 
@@ -37,6 +38,7 @@ import Navbar from "./components/Navbar";
 import QueueView from "./components/QueueView";
 import SearchView from "./components/SearchView";
 import Playbar from "./components/Playbar";
+import Footer from "./components/Footer";
 
 import { url } from "./Requests";
 import { io } from "socket.io-client";
@@ -45,7 +47,7 @@ let socket = null;
 export default {
     name: 'App',
     components: {
-        Playbar, SearchView, QueueView, Navbar
+        Playbar, SearchView, QueueView, Navbar, Footer
     },
     
     data: function() {

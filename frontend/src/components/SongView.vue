@@ -22,6 +22,8 @@
 </template>
 
 <script>
+import he from "he";
+
 export default {
     props: {
         song: {
@@ -42,7 +44,7 @@ export default {
 
     computed: {
         songTitle() {
-            return this.song.snippet.title.replaceAll("&#39;", "'").replaceAll("&amp;", "&");
+            return he.decode(this.song.snippet.title);
         }
     },
 

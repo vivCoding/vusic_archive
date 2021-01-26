@@ -1,10 +1,12 @@
 <template>
     <div id = "searchMain">
         <div id = "searchBar">
+            <!-- TODO: instead of v-model, search when user has stopped typing -->
+            <!-- TODO: add command-line like interface  -->
             <input id = "searchInput" placeholder="Enter a song name, and start queuing!" v-model = "query"/>
-            <!-- <button>Search</button> -->
         </div>
         <h1>Results</h1>
+        <h3 v-show = "searching" id = "searchingMessage">Searching...</h3>
         <h3 v-show = "makingRequest" id = "loadingResultsMessage">Loading results...</h3>
         <div id = "resultsList">
             <h3 v-show = "error">Service is currently down right now. Please try again later!</h3>
@@ -24,36 +26,43 @@ export default {
 
     data: function() {
         return {
+            searching: false,
             makingRequest: false,
+            requestTimeout: null,
             query: "",
             results: [],
-            error: false
+            error: false,
         }
     },
     watch: {
         query() {
-            if (this.query != "" && !this.makingRequest) {
-                this.makingRequest = true;
-                setTimeout(this.updateResults, 2000);
-            }
+            this.searching = true;
+            clearTimeout(this.requestTimeout);
+            this.requestTimeout = setTimeout(this.updateResults, 1250);
         }
     },
 
     methods: {
         updateResults() {
-            console.log("searched:", this.query);
-            this.makingRequest = true;
-            getSearchResults(this.query).then(response => {
-                if (response == "error") {
+            this.searching = false;
+            if (this.query != "") {
+                console.log("searched:", this.query);
+                this.makingRequest = true;
+                getSearchResults(this.query).then(response => {
+                    if (response == "error") {
+                        this.error = true;
+                        console.log("error");
+                    } else {
+                        this.results = response.data.items;
+                        this.error = false;
+                    }
+                    document.getElementById("resultsList").scrollTop = 0;
+                    this.makingRequest = false;
+                }).catch(error => {
+                    this.makingRequest = false;
                     this.error = true;
-                    console.log("error");
-                } else {
-                    this.results = response.data.items;
-                    this.error = false;
-                }
-                document.getElementById("resultsList").scrollTop = 0;
-                this.makingRequest = false;
-            })   
+                })
+            }
         },
         queueSong(song) {
             this.$emit("queueSong", song);

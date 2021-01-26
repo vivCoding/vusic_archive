@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const os = require("os");
 const dotenv = require("dotenv");
 
 const {google} = require("googleapis");
@@ -69,7 +70,7 @@ app.get("/searchresults", (req, res) => {
             res.status(500).send("error");
         }
     }).catch(error => {
-        res.status(500).send("error", error);
+        res.status(500).send("error");
     })
 })
 

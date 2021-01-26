@@ -10,6 +10,7 @@
   "dependencies": {
     "@mdi/font": "^3.6.95",
     "core-js": "^3.6.5",
+    "he": "^1.2.0",
     "howler": "^2.2.1",
     "jquery": "^3.5.1",
     "roboto-fontface": "*",
